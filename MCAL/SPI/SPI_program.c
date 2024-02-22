@@ -1,0 +1,104 @@
+#include "STD_TYPES.h"
+#include "errorStates.h"
+
+#include "SPI_private.h"
+#include "SPI_config.h"
+#include "SPI_interface.h"
+
+
+void SPI_voidInit(void)
+{
+
+#if		SPI_MASTER_SLAVE_SELCECTION	== SPI_MASTER
+
+	SPCR |=(1<<SPCR_MSTR);
+
+#elif	SPI_MASTER_SLAVE_SELCECTION == SPI_SLAVE
+
+	SPCR &=~(1<<SPCR_MSTR);
+#else
+#error "Wrong configuration of SPI_MASTER_SLAVE_SELCECTION"
+#endif
+
+#if		SPI_CLOCK_POLARITY	== SPI_RISING_EDGE
+
+	SPCR |=(1<<SPCR_CPOL);
+
+#elif	SPI_CLOCK_POLARITY == SPI_FALLING_EDGE
+
+	SPCR &=~(1<<SPCR_CPOL);
+#else
+#error "Wrong configuration of SPI_CLOCK_POLARITY"
+#endif
+
+#if		SPI_CLOCK_PHASE	== SPI_ROLTOT
+
+	SPCR &=~(1<<SPCR_CPHA);
+
+#elif	SPI_CLOCK_PHASE == SPI_TOLROT
+
+	SPCR |=(1<<SPCR_CPHA);
+#else
+#error "Wrong configuration of SPI_CLOCK_POLARITY"
+#endif
+
+#if			SPI_CLOCK_RATE_SELECTION 	== DIVIDED_BY_2 	&& SPI_MASTER_SLAVE_SELCECTION == SPI_MASTER
+
+	SPSR |=(1<<SPSR_SPI2X);
+	SPCR &=~(1<<SPCR_SPR1);
+	SPCR &=~(1<<SPCR_SPR0);
+
+#elif		SPI_CLOCK_RATE_SELECTION	== DIVIDED_BY_4		&& SPI_MASTER_SLAVE_SELCECTION == SPI_MASTER
+
+	SPSR &=~(1<<SPSR_SPI2X);
+	SPCR &=~(1<<SPCR_SPR1);
+	SPCR &=~(1<<SPCR_SPR0);
+
+#elif	SPI_CLOCK_RATE_SELECTION 	== DIVIDED_BY_8			&& SPI_MASTER_SLAVE_SELCECTION == SPI_MASTER
+
+	SPSR |=(1<<SPSR_SPI2X);
+	SPCR &=~(1<<SPCR_SPR1);
+	SPCR |=(1<<SPCR_SPR0);
+#elif	SPI_CLOCK_RATE_SELECTION 	== DIVIDED_BY_16		&& SPI_MASTER_SLAVE_SELCECTION == SPI_MASTER
+
+	SPSR &=~(1<<SPSR_SPI2X);
+	SPCR &=~(1<<SPCR_SPR1);
+	SPCR |=(1<<SPCR_SPR0);
+
+#elif	SPI_CLOCK_RATE_SELECTION 	== DIVIDED_BY_32		&& SPI_MASTER_SLAVE_SELCECTION == SPI_MASTER
+
+	SPSR |=(1<<SPSR_SPI2X);
+	SPCR |=(1<<SPCR_SPR1);
+	SPCR &=~(1<<SPCR_SPR0);
+#elif	SPI_CLOCK_RATE_SELECTION 	== DIVIDED_BY_64		&& SPI_MASTER_SLAVE_SELCECTION == SPI_MASTER
+
+	SPSR &=~(1<<SPSR_SPI2X);
+	SPCR |=(1<<SPCR_SPR1);
+	SPCR &=~(1<<SPCR_SPR0);
+#elif	SPI_CLOCK_RATE_SELECTION 	== DIVIDED_BY_128		&& SPI_MASTER_SLAVE_SELCECTION == SPI_MASTER
+
+	SPSR &=~(1<<SPSR_SPI2X);
+	SPCR |=(1<<SPCR_SPR1);
+	SPCR |=(1<<SPCR_SPR0);
+#elif	SPI_MASTER_SLAVE_SELCECTION == SPI_SLAVE
+
+#else
+#error "Wrong configuration of SPI_CLOCK_POLARITY"
+#endif
+
+	SPCR |=(1<<SPCR_SPE); 				//SPI Enable
+}
+
+
+void SPI_u8Send(u8 Copy_u8Data)
+{
+	while(!(SPSR>>SPSR_SPIF)){}
+	SPDR = Copy_u8Data;
+
+}
+
+u8	SPI_u8Receive(void)
+{
+	while(!(SPSR>>SPSR_SPIF)){}
+	return SPDR;
+}
